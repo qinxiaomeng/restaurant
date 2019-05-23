@@ -1,0 +1,26 @@
+server:
+  port: 8089  #可通过该配置修改服务端口
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://localhost:3306/restaurant?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=true
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    ###以下是druid的配置
+    druid:
+      initial-size: 3
+      min-idle: 3
+      max-active: 10
+      max-wait: 60000 #配置获取连接等待超时的时间
+      stat-view-servlet: # 监控后台账号和密码
+        login-username: admin
+        login-password: admin
+      filter:
+        stat:
+          log-slow-sql: true
+          slow-sql-millis: 2000
+mybatis:
+  config-location: classpath:mybatis/mybatis-config.xml
+  mapper-locations: classpath:mybatis/mapper/*.xml
+  type-aliases-package: com.ej.restaurant.model

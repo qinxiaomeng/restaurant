@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--第一步：指明对应文件的Mapper类地址 -->
+<mapper namespace="com.ej.restaurant.mapper.UserInfoMapper">
+
+    <!--第二步：配置表结构和类的对应关系 -->
+    <resultMap id="BaseResultMap" type="com.ej.restaurant.model.UserInfo">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="login_name" property="loginName" jdbcType="VARCHAR"/>
+        <result column="mobile" property="mobile" jdbcType="VARCHAR"/>
+        <result column="password" property="password" jdbcType="VARCHAR"/>
+        <result column="create_date" property="createDate" jdbcType="BIGINT"/>
+        <result column="status" property="status" javaType="com.ej.restaurant.enums.DataStatus"/>
+    </resultMap>
+
+    <!--第三步：写具体的SQL -->
+    <!--PS：MyBatis XML 有一个特点是可以复用 XML，比如我们公用的一些 XML 片段可以提取出来，在其他 SQL 中去引用。例如： -->
+    <sql id="base_column_list">
+        id, login_name, mobile, password, create_date, status
+    </sql>
+
+    <!--从查询参数中封装查询条件 -->
+    <sql id="base_param_list">
+        <if test="mobile != null and mobile != ''">
+            and mobile = #{mobile}
+        </if>
+        <if test="status != null and status != ''">
+            and status = #{status}
+        </if>
+    </sql>
+    <select id="listUsers" resultMap="BaseResultMap" parameterType="com.ej.restaurant.params.UserInfoParam">
+        SELECT
+          <include refid="base_column_list"/>
+        FROM user_info
+        WHERE 1=1
+          <include refid="base_param_list" />
+        ORDER by create_date DESC
+        limit #{beginLine}, #{pageSize}
+    </select>
+
+    <select id="getCount" resultType="Integer" parameterType="com.ej.restaurant.params.UserInfoParam">
+        select
+        count(1)
+        from user_info
+        where 1=1
+        <include refid="base_param_list" />
+    </select>
+
+    <insert id="insert" parameterType="com.ej.restaurant.model.UserInfo">
+        INSERT INTO
+          user_info(
+            id,
+            login_name,
+            mobile,
+            password,
+            create_date,
+            status)
+        VALUES (
+          #{id},
+          #{loginName},
+          #{mobile},
+          #{password},
+          #{createDate},
+          #{status})
+    </insert>
+    <update id="update" parameterType="com.ej.restaurant.model.UserInfo">
+        UPDATE user_info
+        <trim prefix="set" suffixOverrides=",">
+            <if test="loginName != null and loginName != ''">
+                login_name = #{loginName},
+            </if>
+            <if test="mobile != null and mobile != ''">
+                mobile = #{mobile},
+            </if>
+            <if test="password != null and password != ''">
+                password = #{password},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+
+        </trim>
+        WHERE id = #{id}
+    </update>
+    <select id="getUserByLoginName" parameterType="String" resultMap="BaseResultMap">
+        SELECT
+          <include refid="base_column_list"/>
+        FROM user_info
+        WHERE login_name = #{loginName}
+    </select>
+
+</mapper>

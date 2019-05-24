@@ -295,3 +295,241 @@ mybatis-config.xml，主要配置常用的typeAliases，设置类型别名它只
     }
     
 最后检查以下Druid的集成情况，http://localhost:8089/druid，输入我们在配置文件中指定的用户名／密码就可以访问。功能很强大可以做数据源监控、慢sql记录、应用监控等等，按照系统需求配置即可。
+
+#### Day3- 通用类库封装
+一个接口交互过程中涉及入参参数（params）、接口结果（result）以及异常处理。入参参数、接口结果不用多解释，针对异常处理，我们并不想在每个接口方法中去捕获处理，希望能有一个异常统一处理入口。
+
+##### 入参参数
+很多为了省事，常有开发人员将实体类做为接口方法的入参参数，这样做固然可以少写一些代码，但是，接口并不需要实体类的每个属性，导致接口参数过多，给前端开发人员造成很大的困难。所以，我个人更倾向于为每个接口创建单独的params类，便于维护。  例如：
+
+    @Data
+    public class UserInfoParam {
+        @NotEmpty
+        private String mobile;
+        private String loginName;
+        @NotEmpty
+        private String password;
+        private String rearks;
+    }
+
+======================
+
+    @Data
+    public class UserInfoQueryParam extends PageParam {
+        private String mobile;
+        private String status;
+    }
+    
+这样做的好处一是可以减少和前端开发的沟通成本，另外，对参数的控制可以结合框架和注解的方式轻松实现。
+
+##### 接口结果
+对于接口返回，我们通常会返回接口编码、错误消息、数据体等内容。我们封装一个Response对象来实现。
+
+    @ToString
+    public class DLResponseObject<T> implements Serializable{
+      public long code;
+      public String msg;
+      public long time;
+      public T body;
+    
+      public DLResponseObject(long code, String msg, long time, T body) {
+        this.code = code;
+        this.msg = msg;
+        this.time = time;
+        this.body = body;
+      }
+    
+      public static <T> DLResponseObject<T> generate(T body) {
+        return new DLResponseObject<>(DLExceptionType.SUCCESS.getCode(), DLExceptionType.SUCCESS.getMsg(), DLClock.now(), body);
+      }
+    
+      public static DLResponseObject<String> success() {
+        return generate("");
+      }
+    
+      public static DLResponseObject<List> emptyList() {
+        return generate(Collections.emptyList());
+      }
+    
+      public static DLResponseObject<String> fromError(DLException ex) {
+        return new DLResponseObject<>(ex.getDlExceptionType().getCode(), ex.getMessage(), DLClock.now(), "");
+      }
+    
+      public static DLResponseObject<String> fromErrorType(DLExceptionType dlExceptionType) {
+        return new DLResponseObject<>(dlExceptionType.getCode(), dlExceptionType.getMsg(), DLClock.now(), "");
+      }
+    }
+    
+当然，也可以简单封装一个分页数据对象，配合使用。
+
+    @Data
+    public class Page<E> implements Serializable {
+    
+        private static final long serialVersionUID = 2759730160214944840L;
+    
+        private int currentPage = 1; //当前页数
+        private long totalPage;       //总页数
+        private long totalNumber;    //总记录数
+        private List<E> list;        //数据集
+    
+        public Page(PageParam pageParam, long totalNumber, List<E> list){
+            super();
+            this.currentPage = pageParam.getCurrentPage();
+            this.totalNumber = totalNumber;
+            this.list = list;
+            this.totalPage = totalNumber % pageParam.getPageSize() == 0 ? totalNumber / pageParam.getPageSize() : totalNumber / pageParam.getPageSize() + 1;
+        }
+    }
+    
+##### 异常处理
+
+首先我们封装一个异常类，用来将系统异常、错误转成人话，便于将结果回传给前端显示。
+
+###### 异常类型
+通过定义一个枚举来管理异常类型，如下：
+
+    public enum DLExceptionType {
+      SUCCESS(100000, "ok"),
+      COMMON_SERVER_ERROR(100001, "网络错误", ELogType.ERROR),
+      COMMON_ILLEGAL_ARGUMENT(100002, "参数错误"),
+      NOT_LOGIN(100003, "请登录"),
+      USER_REGISTERED(100005, "您已经注册过, 请直接登录"),
+      ARGUMENT_MISS(100006, "填写的信息有误或不全, 请再次检查"),
+      ADMIN_PERMISSION_DENY(100008, "没有权限"),
+      USER_MANUAL_REGISTERED(100009, "请到登录页面重置密码"),
+      VCODE_MISMATCH(100011, "验证码错误"),
+      LOGINNAME_PW_ERROR(100013, "用户名、密码错误"),
+      CUST_HAVENOT_REGISTED(1000011, "请您先注册");
+    
+    
+    
+      private long code;
+      private String msg;
+      private ELogType eLogType;
+    
+      DLExceptionType(long c, String m) {
+        code = c;
+        msg = m;
+        this.eLogType = ELogType.WARNING;
+      }
+    
+      DLExceptionType(long c, String m, ELogType eLogType) {
+        code = c;
+        msg = m;
+        this.eLogType = eLogType;
+      }
+    
+      public long getCode() {
+        return code;
+      }
+    
+      public String getMsg() {
+        return msg;
+      }
+    
+      public ELogType geteLogType() {
+        return eLogType;
+      }
+    
+      public static enum ELogType {
+        WARNING,
+        ERROR
+      }
+    }
+    
+###### 自定义异常类
+
+    public class DLException extends RuntimeException {
+      private DLExceptionType dlExceptionType;
+      private String detail = null;
+    
+      public DLException(String msg) {
+        super(msg);
+        this.dlExceptionType = DLExceptionType.COMMON_SERVER_ERROR;
+        detail = msg;
+      }
+    
+      public DLException(DLExceptionType type) {
+        super(type.getMsg());
+        this.dlExceptionType = type;
+      }
+    
+      public DLException(DLExceptionType type, String msg) {
+        super(msg);
+        this.dlExceptionType = type;
+        this.detail = msg;
+      }
+    
+      public DLException(DLExceptionType type, Throwable cause) {
+        super(cause);
+        this.dlExceptionType = type;
+      }
+    
+      public DLException(DLExceptionType type, String msg, Throwable cause) {
+        super(msg, cause);
+        this.dlExceptionType = type;
+        this.detail = msg;
+      }
+    
+      public DLExceptionType getDlExceptionType() {
+        return dlExceptionType;
+      }
+    
+      @Override
+      public String getMessage() {
+        if (detail != null) {
+          return detail;
+        }
+        return dlExceptionType.getMsg();
+      }
+    
+      public static DLException wrap(Throwable throwable) {
+        if (throwable instanceof DLException) {
+          return (DLException) throwable;
+        }
+        return new DLException(DLExceptionType.COMMON_SERVER_ERROR, throwable);
+      }
+    
+      public static DLException wrap(Throwable throwable, DLExceptionType type) {
+        return new DLException(type, throwable);
+      }
+    }
+    
+ ###### 定义接口异常的统一处理
+ 我们使用 @ControllerAdvice 注解，可以用于定义@ExceptionHandler、@InitBinder、@ModelAttribute，并应用到所有@RequestMapping中。  这样便实现了异常的全局处理。
+ 
+ 
+     @ControllerAdvice
+     public class CommonExceptionHandler {
+     
+         Logger log = LoggerFactory.getLogger(getClass());
+     
+         @ExceptionHandler(MethodArgumentNotValidException.class)
+         public DLResponseObject handleBindException(MethodArgumentNotValidException ex){
+             FieldError fieldError = ex.getBindingResult().getFieldError();
+             log.info("参数校验异常:{}({})", fieldError.getDefaultMessage(),fieldError.getField());
+     
+             return DLResponseObject.fromErrorType(DLExceptionType.COMMON_ILLEGAL_ARGUMENT);
+         }
+     
+         @ExceptionHandler(BindException.class)
+         public DLResponseObject handleBindException(BindException ex){
+             FieldError fieldError = ex.getBindingResult().getFieldError();
+             log.info("必填校验异常:{}({})", fieldError.getDefaultMessage(),fieldError.getField());
+             return DLResponseObject.fromErrorType(DLExceptionType.COMMON_ILLEGAL_ARGUMENT);
+         }
+     
+         @ExceptionHandler(DLException.class)
+         public DLResponseObject exceptionHandler(DLException ex){
+             return DLResponseObject.fromError(ex);
+         }
+     
+         @ExceptionHandler(Exception.class)
+         @ResponseBody
+         public DLResponseObject exceptionHandler(Exception e){
+             log.error("unchecked exception:", e);
+             return DLResponseObject.fromErrorType(DLExceptionType.COMMON_SERVER_ERROR);
+         }
+     }
+     
+其他的工具类，就不贴代码了。

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ej.restaurant.mapper.MenuInfoMapper">
+    <resultMap id="BaseResultMap" type="com.ej.restaurant.model.MenuInfo">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="menu_name" property="menuName" jdbcType="VARCHAR"/>
+        <result column="price" property="price" jdbcType="DECIMAL"/>
+        <result column="vip_price" property="vipPrice" jdbcType="DECIMAL"/>
+        <result column="menu_img" property="menuImg" jdbcType="VARCHAR"/>
+        <result column="sort" property="sort" jdbcType="INTEGER"/>
+        <result column="merchant_id" property="merchantId" jdbcType="VARCHAR"/>
+        <result column="remarks" property="remarks" jdbcType="VARCHAR"/>
+        <result column="status" property="status" javaType="com.ej.restaurant.enums.DataStatus"/>
+    </resultMap>
+    <sql id="base_column_list">
+        a.id, a.menu_name, a.price, a.vip_price, a.menu_img, a.sort, a.merchant_id, a.remarks, a.status
+    </sql>
+
+    <insert id="insert" parameterType="com.ej.restaurant.model.MenuInfo">
+        INSERT INTO menu_info(
+          id,
+          menu_name,
+          price,
+          vip_price,
+          menu_img,
+          sort,
+          merchant_id,
+          remarks,
+          status
+        ) VALUES (
+          #{id},
+          #{menuName},
+          #{price},
+          #{vipPrice},
+          #{menuImg},
+          #{sort},
+          #{merchantId},
+          #{remarks},
+          #{status}
+        )
+    </insert>
+    <select id="listMenuInfoByMerchantIdJoinTypeInfo" resultMap="BaseResultMap">
+        SELECT
+          <include refid="base_column_list"/>
+        FROM menu_info a
+        WHERE merchant_id = #{merchantId}
+    </select>
+</mapper>

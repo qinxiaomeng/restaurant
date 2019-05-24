@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ej.restaurant.mapper.MerchantInfoMapper">
+    <resultMap id="BaseResultMap" type="com.ej.restaurant.model.MerchantInfo">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="merchant_name" property="merchantName" jdbcType="VARCHAR"/>
+        <result column="cert_type" property="certType" jdbcType="VARCHAR"/>
+        <result column="cert_number" property="certNumber" jdbcType="VARCHAR"/>
+        <result column="owner_name" property="ownerName" jdbcType="VARCHAR"/>
+        <result column="owner_cert_type" property="ownerCertType" jdbcType="VARCHAR"/>
+        <result column="owner_cert_number" property="ownerCertNumber" jdbcType="VARCHAR"/>
+        <result column="owner_mobile" property="ownerMobile" jdbcType="VARCHAR"/>
+        <result column="busi_addr" property="busiAddr" jdbcType="VARCHAR"/>
+        <result column="reg_addr" property="regAddr" jdbcType="VARCHAR"/>
+        <result column="status" property="status" javaType="com.ej.restaurant.enums.DataStatus"/>
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+        <result column="create_date" property="createDate" jdbcType="BIGINT"/>
+        <result column="exp_date" property="expDate" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <sql id="base_column_list">
+        id,
+        merchant_name,
+        cert_type,
+        cert_number,
+        owner_name,
+        owner_cert_type,
+        owner_cert_number,
+        owner_mobile,
+        busi_addr,
+        reg_addr,
+        status,
+        user_id,
+        create_date,
+        exp_date
+    </sql>
+
+    <select id="listMerchantInfoByUser" parameterType="String" resultMap="BaseResultMap">
+        SELECT
+          <include refid="base_column_list"/>
+        FROM merchant_info
+        WHERE user_id = #{userId}
+    </select>
+
+    <insert id="insert" parameterType="com.ej.restaurant.model.MerchantInfo">
+        INSERT INTO merchant_info(
+        id,
+        merchant_name,
+        cert_type,
+        cert_number,
+        owner_name,
+        owner_cert_type,
+        owner_cert_number,
+        owner_mobile,
+        busi_addr,
+        reg_addr,
+        status,
+        user_id,
+        create_date,
+        exp_date
+        ) VALUES (
+        #{id},
+        #{merchantName},
+        #{certType},
+        #{certNumber},
+        #{ownerName},
+        #{ownerCertType},
+        #{ownerCertNumber},
+        #{ownerMobile},
+        #{busiAddr},
+        #{regAddr},
+        #{status},
+        #{userId},
+        #{createDate},
+        #{expDate}
+        )
+    </insert>
+
+</mapper>

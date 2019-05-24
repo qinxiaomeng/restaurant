@@ -24,3 +24,7 @@ mybatis:
   config-location: classpath:mybatis/mybatis-config.xml
   mapper-locations: classpath:mybatis/mapper/*.xml
   type-aliases-package: com.ej.restaurant.model
+
+wxApiPath: /wx
+merchantApiPath: /api
+adminApiPath: /admin

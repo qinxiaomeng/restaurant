@@ -1202,4 +1202,55 @@ OutputCapture来判断System是否输出了我们想要的内容。
 ##### 另外还用经常使用的Junit测试方法、Assert（断言）的使用，之前的例子中有简单应用
 
 #### Day7 - 部署
+使用SpringBoot基本都是做微服务应用，大的分布式架构肯定要利用工具来部署应用，比如：jenkins、docker容器等等。这里我们使用Docker容器来完成部署，第一次接触docker，从网上找了个简单教程，先照着来一遍。  
+需要先安装docker。
+##### plugins添加docker插件
 
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<fork>true</fork>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.spotify</groupId>
+				<artifactId>docker-maven-plugin</artifactId>
+				<version>1.2.0</version>
+				<configuration>
+					<imageName>${docker.image.prefix}/${project.artifactId}</imageName>
+					<dockerDirectory>src/main/docker</dockerDirectory>
+					<resources>
+						<resource>
+							<targetPath>/</targetPath>
+							<directory>${project.build.directory}</directory>
+							<include>${project.build.finalName}.jar</include>
+						</resource>
+					</resources>
+				</configuration>
+			</plugin>
+		</plugins>
+		
+1）${docker.image.prefix}，自定义的镜像名称  
+2）${project.artifactId}，项目的 artifactId  
+3）${project.build.directory}，构建目录，缺省为 target  
+4）${project.build.finalName}，产出物名称，缺省为 ${project.artifactId}-${project.version}  
+
+##### 在目录 src/main/docker 下创建 Dockerfile 文件，Dockerfile 文件用来说明如何来构建镜像
+    FROM openjdk:8-jdk-alpine
+    VOLUME /tmp
+    ADD restaurant-1.0.jar app.jar
+    ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+不解释，因为看不懂。
+
+##### 构建
+mvn clean package docker:build -Dmaven.test.skip=true
+
+如果构建成功，输入：docker images 会看到docker镜像已经完成。
+
+##### 运行容器
+docker run -p 8089:8089 -t springboot/restaurant
+
+这样我们就运行来容器，同时看到应用的启动日志。启动成功后可以像之前访问系统一样去访问应用。  
+到目前把常用的工具、组件都集成了。下一步就是完善各个功能。系统上线后，我就去开餐馆了！

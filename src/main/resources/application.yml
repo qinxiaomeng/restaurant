@@ -3,9 +3,9 @@ server:
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
-    url: jdbc:mysql://localhost:3306/restaurant?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=true
+    url: jdbc:mysql://117.50.19.191:4040/restaurant?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&useSSL=true
     username: root
-    password: password
+    password: 20_Qlr_16
     driver-class-name: com.mysql.cj.jdbc.Driver
     ###以下是druid的配置
     druid:
@@ -22,7 +22,7 @@ spring:
           slow-sql-millis: 2000
   redis:
     database: 0
-    host: localhost
+    host: 119.3.205.141
     port: 6379
     password: password
     lettuce:
@@ -32,14 +32,14 @@ spring:
         max-idle: 8
         min-idle: 0
   rabbitmq:
-    host: 127.0.0.1
+    host: 49.4.123.46
     port: 5672
     username: guest
     password: guest
-  boot:
-    admin:
-      client:
-        url: http://localhost:16666
+  #boot:
+    #admin:
+      #client:
+        #url: http://localhost:16666
 mybatis:
   config-location: classpath:mybatis/mybatis-config.xml
   mapper-locations: classpath:mybatis/mapper/*.xml

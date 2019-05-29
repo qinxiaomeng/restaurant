@@ -24,4 +24,8 @@ public class MenuInfoService extends BaseService<MenuInfoMapper, MenuInfo> {
     public List<MenuInfo> listMenuInfoByMerchantIdJoinTypeInfo(String merchantId){
         return dao.listMenuInfoByMerchantIdJoinTypeInfo(merchantId);
     }
+
+    public void ut(){
+        System.out.println("Hello world!");
+    }
 }

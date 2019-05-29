@@ -20,11 +20,44 @@ spring:
         stat:
           log-slow-sql: true
           slow-sql-millis: 2000
+  redis:
+    database: 0
+    host: localhost
+    port: 6379
+    password: password
+    lettuce:
+      pool:
+        max-active: 8
+        max-wait: -1
+        max-idle: 8
+        min-idle: 0
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
+  boot:
+    admin:
+      client:
+        url: http://localhost:16666
 mybatis:
   config-location: classpath:mybatis/mybatis-config.xml
   mapper-locations: classpath:mybatis/mapper/*.xml
   type-aliases-package: com.ej.restaurant.model
-
 wxApiPath: /wx
 merchantApiPath: /api
 adminApiPath: /admin
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*' #开启所有检查项
+  endpoint:
+    health:
+      show-details: always #展示健康指标详细信息
+
+info:
+  app:
+    name: ej-restaurant
+    version: 1.0.0
+    test: test
